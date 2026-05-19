@@ -1,0 +1,36 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/nesbot/carbon/extension.neon
+    - vendor/pestphp/pest/extension.neon
+
+parameters:
+
+    paths:
+        - app/
+        - tests/
+
+    # Level 10 is the highest level
+    level: 8
+
+    # Parallel workers each spawn their own PHP process; on multi-core machines
+    # the default (= CPU count) makes each worker fight for memory. Bound the
+    # worker count so each process has enough headroom. Combined with
+    # composer's `analyse` script (--memory-limit=2G), this keeps Larastan
+    # plus level 8 stable on the standard PHP memory limit.
+    parallel:
+        maximumNumberOfProcesses: 2
+        processTimeout: 300.0
+
+    ignoreErrors:
+        # Pest binds test closures to TestCase at runtime; PHPStan cannot track this statically.
+        -
+            message: '#Pest\\PendingCalls\\TestCall#'
+            paths:
+                - tests/
+        -
+            message: '#Pest\\Mixins\\Expectation#'
+            paths:
+                - tests/
+
+#    excludePaths:
+#        - ./*/*/FileToBeExcluded.php
