@@ -190,7 +190,28 @@ Content-Type: application/json
 }
 ```
 
-Response: `201 Created` with `{ "flightId": "uuid" }`
+Response: `201 Created`
+
+```json
+{
+  "flightId": "550e8400-e29b-41d4-a716-446655440000",
+  "legs": [
+    {
+      "segments": [
+        {
+          "origin": "BCN",
+          "destination": "LON",
+          "departure": "2026-06-09T06:45:00",
+          "arrival": "2026-06-09T10:55:00",
+          "cabinClass": "Y",
+          "airline": "UA",
+          "flightNumber": "101"
+        }
+      ]
+    }
+  ]
+}
+```
 
 ### Update Flight
 
@@ -203,7 +224,13 @@ Idempotency-Key: unique-request-id
 Content-Type: application/json
 ```
 
-Response: `204 No Content`
+Response: `202 Accepted`
+
+```json
+{ "flightId": "550e8400-e29b-41d4-a716-446655440000" }
+```
+
+Processing happens asynchronously via Horizon.
 
 The `Idempotency-Key` header ensures duplicate requests (retries, network timeouts) are processed only once.
 
@@ -229,6 +256,10 @@ This decision was made under the assumption that the assignment payload format i
 **Known limitation:** if an incoming leg's effective origin or destination differs from any stored leg, the update returns `404`. The system cannot match a leg whose route has fundamentally changed.
 
 **Alternative considered:** adding a `uuid` to each leg and including `legId` in the update payload. This would make matching explicit, eliminate the route-based business logic entirely, and handle route changes gracefully. It was not implemented because the assignment payload example carries no leg identifier, and the stated scope (schedule synchronisation) does not require route changes.
+
+### API versioning
+
+In a production API, all routes would be prefixed with a version segment (e.g. `/api/v1/flights`) so that breaking changes can be introduced under `/api/v2/` without affecting existing consumers. This project omits versioning because the assignment specifies `/api/flights` as the canonical path and the scope does not include a second version. Adding it would be a one-line change in `routes/api.php`.
 
 ---
 
