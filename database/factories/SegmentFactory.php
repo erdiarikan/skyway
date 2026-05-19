@@ -20,7 +20,7 @@ final class SegmentFactory extends Factory
     public function definition(): array
     {
         $departure = fake()->dateTimeBetween('+1 week', '+3 months');
-        $arrival = (clone $departure)->modify('+'.fake()->numberBetween(1, 12).' hours');
+        $arrival = (clone $departure)->modify('+' . fake()->numberBetween(1, 12) . ' hours');
 
         return [
             'leg_id' => Leg::factory(),
