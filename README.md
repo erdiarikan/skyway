@@ -8,7 +8,7 @@ A flight management REST API built with Laravel 13. Supports creating and updati
 
 | Layer | Choice |
 |---|---|
-| PHP | 8.3+ |
+| PHP | 8.5 |
 | Framework | Laravel 13.x |
 | Database | MySQL |
 | Cache & Queue | Redis + Laravel Horizon |
