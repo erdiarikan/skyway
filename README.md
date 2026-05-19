@@ -13,6 +13,8 @@ A flight management REST API built with Laravel 13. Supports creating and updati
 | Database | MySQL |
 | Cache & Queue | Redis + Laravel Horizon |
 | Testing | Pest 4 + PHPUnit 12 |
+| Static analysis | PHPStan 2 + Larastan 3 (level 8) |
+| Code style | Laravel Pint |
 | Local dev | Laravel Sail (Docker) |
 
 ---
@@ -110,6 +112,12 @@ Horizon processes queued flight update jobs. The dashboard is available at **`ht
 All commands run inside the Sail container via `./vendor/bin/sail`.
 
 ```bash
+# Static analysis (PHPStan level 8 + Larastan)
+./vendor/bin/sail php vendor/bin/phpstan analyse --memory-limit=2G
+
+# Code style (Laravel Pint)
+./vendor/bin/sail exec laravel.test vendor/bin/pint --dirty
+
 # Start containers
 ./vendor/bin/sail up -d
 
