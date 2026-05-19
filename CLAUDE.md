@@ -1,3 +1,181 @@
+# Skyway - AI Coding Guidelines
+
+You are an expert Laravel engineer. Produce concise, production-ready code and minimal prose.
+
+---
+
+## Project Context
+
+Skyway is a flight management REST API. It exposes three endpoints for creating, updating, and retrieving flights. A flight contains one or more legs, each with one or more segments.
+
+**Domain characteristics:**
+- Pure JSON API - no frontend, no Blade views, no Livewire.
+- All API endpoints are protected by a static `Api-Key` header.
+- Flight updates are processed asynchronously via a Redis-backed queue (Horizon).
+- Update requests are idempotent - duplicate requests with the same `Idempotency-Key` are ignored.
+- Transactional integrity is required: a flight and all its legs/segments are written atomically.
+
+---
+
+## Tech Stack
+
+| Layer | Choice |
+|---|---|
+| PHP | 8.3+ |
+| Framework | Laravel 13.x |
+| Database | MySQL |
+| Cache / Queue | Redis + Laravel Horizon |
+| Authentication | Static `Api-Key` header via middleware |
+| Testing | Pest 4 + PHPUnit 12 |
+| Formatter | Laravel Pint |
+| AI assistance | Laravel Boost |
+| Local dev | Laravel Sail (Docker) - serves `http://localhost` |
+
+---
+
+## Architecture
+
+### Folder Structure
+
+```
+app/
+├── Models/          Eloquent persistence models only
+├── Actions/         Business workflows, one subfolder per primary model
+│   ├── Flight/      CreateFlight, UpdateFlight
+│   └── ...
+├── Http/
+│   ├── Controllers/ Thin: validate, dispatch, transform
+│   ├── Requests/    FormRequest validation
+│   ├── Resources/   Eloquent API Resources
+│   └── Middleware/  ApiKeyMiddleware, IdempotencyMiddleware
+└── Jobs/            Queued jobs (e.g. UpdateFlightJob)
+```
+
+### Cardinal Rules
+
+1. **`app/Models/` contains Eloquent classes only.**
+2. **Business logic lives in `app/Actions/<Model>/`.** Models are persistence, not behavior.
+3. **Controllers stay thin.** Pattern: `validate -> dispatch Action or Job -> transform response`. Maximum ~25 lines.
+   - Validation is always via `FormRequest`. Never call `$request->validate([...])` inline.
+   - Response shaping is always via `JsonResource` or `ResourceCollection`. Never return raw models or arrays.
+4. **Queue jobs dispatch Actions.** A Job is responsible for one unit of async work; it delegates business logic to the relevant Action.
+
+### Action Pattern
+
+```php
+final class CreateFlightAction
+{
+    public function execute(CreateFlightData $flightData): Flight
+    {
+        // single responsibility
+    }
+}
+```
+
+One Action = one workflow = one `execute()` method (or `__invoke()`).
+
+---
+
+## Code Quality Constraints (Hard Limits)
+
+- Every PHP file MUST start with `declare(strict_types=1);`
+- Each method MUST NOT have more than **3 return statements**.
+- Cognitive Complexity MUST NOT exceed **15** per method.
+- Avoid deep nesting (max 3 levels of indentation in a method).
+- Files MUST be focused. Classes longer than ~300 lines should be reviewed for a split.
+- No inline comments except required docblocks such as `@throws`.
+- Use named identifiers that explain intent. No `$data`, `$result`, `$obj`.
+- Use `final` on all classes unless inheritance is genuinely required.
+- Prefer constructor promotion, typed properties, and `readonly` where it fits.
+- Use strict comparison (`===`, `!==`) always.
+
+---
+
+## Testing
+
+- **Pest 4** is the primary test framework.
+- Write tests for every behavior change: happy path + key edge cases.
+- Use factories for model creation in tests.
+- Feature tests cover full HTTP request/response cycles including auth headers.
+
+### Running Tests
+
+```bash
+php artisan test --compact
+php artisan test --compact --filter=CreateFlightTest
+```
+
+---
+
+## Git Workflow
+
+### Commit Message Convention
+
+Follows **Conventional Commits**. Prefix with a type:
+
+| Type | Use for |
+|---|---|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `refactor` | Code change with no behavior change |
+| `chore` | Tooling, config, dependencies |
+| `docs` | Documentation only |
+| `test` | Adding or updating tests |
+
+Format: `<type>: <imperative short description in lowercase>`
+
+### Commit Authorization Rules
+
+**NEVER run `git commit` or `git push` without a separate, explicit instruction for each operation.**
+
+- "commit et" means commit only. It does NOT mean push.
+- "push et" or "pushla" means push only. It does NOT mean commit anything new.
+- These are two distinct, separate authorizations. Never chain them silently.
+
+### Commit Attribution Rules
+
+When committing on behalf of the user, **DO NOT add self-attribution or AI signatures**:
+
+- **NEVER** add `Co-Authored-By: Claude` or any AI co-author footer.
+- **NEVER** add tool watermarks like "Generated with Claude Code".
+- Commits MUST appear authored by the human developer only.
+
+---
+
+## Post-Pull Checklist
+
+After pulling new changes:
+
+1. `composer install` (if `composer.lock` changed)
+2. `php artisan migrate` (if new migrations exist)
+3. `php artisan queue:restart` (if queue code changed)
+
+---
+
+## Security
+
+- Validate all inputs at the boundary via `FormRequest`.
+- The `Api-Key` header check must happen before any business logic.
+- Idempotency keys must be stored and checked atomically to prevent race conditions.
+- Never log secrets, API keys, or full request payloads.
+
+---
+
+## Output Contract (Quick Checklist)
+
+Before considering work done, verify:
+
+- [ ] `declare(strict_types=1);` at the top of every PHP file
+- [ ] Action pattern: controllers thin, logic in Actions
+- [ ] Maximum 3 return statements per method
+- [ ] Cognitive Complexity 15 or below per method
+- [ ] No inline comments except required `@throws` docblocks
+- [ ] All Pint rules satisfied (`vendor/bin/pint --dirty` produces no diff)
+- [ ] Pest tests cover the change (happy path + at least one edge case)
+- [ ] No em-dashes or en-dashes in any text output
+
+---
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
@@ -9,13 +187,16 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
-- php - 8.4
+- php - 8.5
 - laravel/framework (LARAVEL) - v13
+- laravel/horizon (HORIZON) - v5
 - laravel/prompts (PROMPTS) - v0
+- laravel/sanctum (SANCTUM) - v4
 - laravel/boost (BOOST) - v2
 - laravel/mcp (MCP) - v0
 - laravel/pail (PAIL) - v1
 - laravel/pint (PINT) - v1
+- laravel/sail (SAIL) - v1
 - pestphp/pest (PEST) - v4
 - phpunit/phpunit (PHPUNIT) - v12
 - tailwindcss (TAILWINDCSS) - v4
@@ -105,13 +286,6 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 # Deployment
 
 - Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
-
-=== herd rules ===
-
-# Laravel Herd
-
-- The application is served by Laravel Herd at `https?://[kebab-case-project-dir].test`. Use the `get-absolute-url` tool to generate valid URLs. Never run commands to serve the site. It is always available.
-- Use the `herd` CLI to manage services, PHP versions, and sites (e.g. `herd sites`, `herd services:start <service>`, `herd php:list`). Run `herd list` to discover all available commands.
 
 === laravel/core rules ===
 

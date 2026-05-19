@@ -1,58 +1,223 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Skyway
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A flight management REST API built with Laravel 13. Supports creating and updating flights with nested legs and segments, asynchronous processing via Laravel Horizon, and idempotent updates.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Tech Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Layer | Choice |
+|---|---|
+| PHP | 8.3+ |
+| Framework | Laravel 13.x |
+| Database | MySQL |
+| Cache & Queue | Redis + Laravel Horizon |
+| Testing | Pest 4 + PHPUnit 12 |
+| Local dev | Laravel Sail (Docker) |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Prerequisites
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+- No local PHP, MySQL, or Redis installation required - Sail provides all services via Docker.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Local Setup
 
-## Agentic Development
+### 1. Clone and install dependencies
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+If you have PHP installed locally:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone git@github.com:erdiarikan/skyway.git
+cd skyway
+composer install
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+If you do **not** have PHP installed locally, use the Docker helper to run Composer:
 
-## Contributing
+```bash
+git clone git@github.com:erdiarikan/skyway.git
+cd skyway
+docker run --rm \
+    -u "$(id -u):$(id -g)" \
+    -v "$(pwd):/var/www/html" \
+    -w /var/www/html \
+    laravelsail/php83-composer:latest \
+    composer install --ignore-platform-reqs
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 2. Configure the environment
 
-## Code of Conduct
+```bash
+cp .env.example .env
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+The default `.env.example` is pre-configured for Sail. Verify or set these values:
 
-## Security Vulnerabilities
+```env
+APP_URL=http://localhost
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=skyway
+DB_USERNAME=sail
+DB_PASSWORD=password
+
+REDIS_HOST=redis
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+
+QUEUE_CONNECTION=redis
+
+API_KEY=your-secret-key
+```
+
+### 3. Start Sail
+
+```bash
+./vendor/bin/sail up -d
+```
+
+Sail starts MySQL, Redis, and the PHP application container. On first run, Docker pulls the images - this takes a few minutes.
+
+### 4. Generate app key and run migrations
+
+```bash
+./vendor/bin/sail artisan key:generate
+./vendor/bin/sail artisan migrate
+```
+
+The app is now available at **`http://localhost`**.
+
+### 5. Start Horizon
+
+In a separate terminal:
+
+```bash
+./vendor/bin/sail artisan horizon
+```
+
+Horizon processes queued flight update jobs. The dashboard is available at **`http://localhost/horizon`**.
+
+---
+
+## Daily Commands
+
+All commands run inside the Sail container via `./vendor/bin/sail`.
+
+```bash
+# Start containers
+./vendor/bin/sail up -d
+
+# Stop containers
+./vendor/bin/sail down
+
+# Run tests
+./vendor/bin/sail artisan test --compact
+
+# Filter to a specific test
+./vendor/bin/sail artisan test --compact --filter=CreateFlightTest
+
+# Format PHP code (Pint)
+./vendor/bin/sail exec laravel.test vendor/bin/pint
+
+# Tail logs
+./vendor/bin/sail artisan pail
+
+# Open a Tinker shell
+./vendor/bin/sail artisan tinker
+```
+
+### Shell alias (optional)
+
+Add to your `~/.zshrc` or `~/.bashrc` to avoid typing the full path:
+
+```bash
+alias sail='./vendor/bin/sail'
+```
+
+Then use `sail up -d`, `sail artisan migrate`, etc.
+
+---
+
+## Testing
+
+```bash
+./vendor/bin/sail artisan test --compact
+```
+
+Tests run against a dedicated `skyway_test` MySQL database (configured in `phpunit.xml`).
+
+---
+
+## API Endpoints
+
+All endpoints require the `Api-Key` header for authentication.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/flights` | Create a flight with legs and segments |
+| `PUT` | `/api/flights/{flightId}` | Update an existing flight (async, idempotent) |
+| `GET` | `/api/flights/{flightId}` | Retrieve a flight's legs and segments |
+
+### Create Flight
+
+```http
+POST /api/flights
+Api-Key: your-secret-key
+Content-Type: application/json
+
+{
+  "legs": [
+    {
+      "segments": [
+        {
+          "origin": "BCN",
+          "destination": "LON",
+          "departure": "2026-06-09T06:45:00",
+          "arrival": "2026-06-09T10:55:00",
+          "cabinClass": "Y",
+          "airline": "UA",
+          "flightNumber": "101"
+        }
+      ]
+    }
+  ]
+}
+```
+
+Response: `201 Created` with `{ "flightId": "uuid" }`
+
+### Update Flight
+
+Accepts partial updates (one or more legs). Processed asynchronously via queue.
+
+```http
+PUT /api/flights/{flightId}
+Api-Key: your-secret-key
+Idempotency-Key: unique-request-id
+Content-Type: application/json
+```
+
+Response: `204 No Content`
+
+The `Idempotency-Key` header ensures duplicate requests (retries, network timeouts) are processed only once.
+
+### Get Flight
+
+```http
+GET /api/flights/{flightId}
+Api-Key: your-secret-key
+```
+
+Response: `200 OK` with the flight's legs and segments.
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT
