@@ -32,7 +32,7 @@ it('replaces segments on the matching leg', function () {
 
     $this->putJson("/api/flights/{$flight->uuid}", validPayload(), withIdempotency());
 
-    $segment = $flight->legs()->first()->segments()->first();
+    $segment = $flight->legs()->firstOrFail()->segments()->firstOrFail();
 
     expect($segment->flight_number)->toBe('UA101')
         ->and($segment->airline)->toBe('UA')
