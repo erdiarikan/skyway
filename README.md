@@ -84,7 +84,7 @@ API_KEY=your-secret-key
 ./vendor/bin/sail up -d
 ```
 
-Sail starts MySQL, Redis, and the PHP application container. On first run, Docker pulls the images - this takes a few minutes.
+Sail starts MySQL, Redis, the PHP application container, and a dedicated Horizon worker. On first run, Docker pulls the images - this takes a few minutes.
 
 ### 4. Generate app key and run migrations
 
@@ -93,17 +93,7 @@ Sail starts MySQL, Redis, and the PHP application container. On first run, Docke
 ./vendor/bin/sail artisan migrate
 ```
 
-The app is now available at **`http://localhost`**.
-
-### 5. Start Horizon
-
-In a separate terminal:
-
-```bash
-./vendor/bin/sail artisan horizon
-```
-
-Horizon processes queued flight update jobs. The dashboard is available at **`http://localhost/horizon`**.
+The app is now available at **`http://localhost`**. The Horizon dashboard is at **`http://localhost/horizon`**.
 
 ---
 
