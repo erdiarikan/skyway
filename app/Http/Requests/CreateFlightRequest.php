@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Data\FlightData;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -31,6 +32,11 @@ final class CreateFlightRequest extends FormRequest
             'legs.*.segments.*.airline' => ['required', 'string', 'size:2', 'alpha'],
             'legs.*.segments.*.flightNumber' => ['required', 'string', 'max:10'],
         ];
+    }
+
+    public function toData(): FlightData
+    {
+        return FlightData::fromArray($this->validated());
     }
 
     public function withValidator(Validator $validator): void
