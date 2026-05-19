@@ -218,6 +218,20 @@ Response: `200 OK` with the flight's legs and segments.
 
 ---
 
+## Design Decisions
+
+### Leg matching on update
+
+The Update Flight endpoint receives legs without explicit identifiers. To determine which existing leg a payload leg corresponds to, the system matches by the leg's **route**: the `origin` of the first segment and the `destination` of the last segment.
+
+This decision was made under the assumption that the assignment payload format is fixed — legs carry no `legId`. The assumption also holds that this endpoint handles **schedule changes** (departure/arrival times, flight numbers), not route changes. A leg's route (e.g. BCN→JFK) is treated as immutable identity.
+
+**Known limitation:** if an incoming leg's effective origin or destination differs from any stored leg, the update returns `404`. The system cannot match a leg whose route has fundamentally changed.
+
+**Alternative considered:** adding a `uuid` to each leg and including `legId` in the update payload. This would make matching explicit, eliminate the route-based business logic entirely, and handle route changes gracefully. It was not implemented because the assignment payload example carries no leg identifier, and the stated scope (schedule synchronisation) does not require route changes.
+
+---
+
 ## License
 
 MIT
