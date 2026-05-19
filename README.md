@@ -255,6 +255,10 @@ This decision was made under the assumption that the assignment payload format i
 
 **Alternative considered:** adding a `uuid` to each leg and including `legId` in the update payload. This would make matching explicit, eliminate the route-based business logic entirely, and handle route changes gracefully. It was not implemented because the assignment payload example carries no leg identifier, and the stated scope (schedule synchronisation) does not require route changes.
 
+### Horizon dashboard authentication
+
+In a production setup, the Horizon dashboard at `/horizon` would be protected by a gate in `App\Providers\HorizonServiceProvider` — typically restricting access to a set of known admin email addresses or a role check. This project leaves the gate empty (dashboard accessible only in local environments, blocked in production by default) because the assignment does not require an authenticated user system. Adding it is a one-line change inside `HorizonServiceProvider::gate()`.
+
 ### API versioning
 
 In a production API, all routes would be prefixed with a version segment (e.g. `/api/v1/flights`) so that breaking changes can be introduced under `/api/v2/` without affecting existing consumers. This project omits versioning because the assignment specifies `/api/flights` as the canonical path and the scope does not include a second version. Adding it would be a one-line change in `routes/api.php`.
