@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "/Users/erdiarikan/Library/Application Support/Herd/bin/php84",
+            "args": [
+                "/Users/erdiarikan/Dropbox/Development Projects/Personal Projects/skyway/artisan",
+                "boost:mcp"
+            ]
+        }
+    }
+}
