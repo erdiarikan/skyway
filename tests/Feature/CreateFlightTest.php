@@ -6,14 +6,13 @@ use App\Models\Flight;
 use App\Models\Leg;
 use App\Models\Segment;
 
-it('creates a flight and returns 201 with the full structure', function () {
+it('creates a flight and returns 201 with the flight id', function () {
     $response = $this->postJson('/api/flights', validPayload(), withIdempotency());
 
     $response
         ->assertCreated()
-        ->assertJsonStructure(['flightId', 'legs' => [['segments']]])
-        ->assertJsonCount(1, 'legs')
-        ->assertJsonCount(1, 'legs.0.segments');
+        ->assertJsonStructure(['flightId'])
+        ->assertJsonMissingPath('legs');
 
     expect(Flight::count())->toBe(1)
         ->and(Leg::count())->toBe(1)

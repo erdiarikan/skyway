@@ -19,12 +19,11 @@ function flightWithLeg(string $origin = 'BCN', string $destination = 'LHR'): Fli
     return $flight;
 }
 
-it('dispatches the update job and returns 202 with the flight id', function () {
+it('dispatches the update job and returns 204', function () {
     $flight = flightWithLeg();
 
     $this->putJson("/api/flights/{$flight->uuid}", validPayload(), withIdempotency())
-        ->assertAccepted()
-        ->assertJson(['flightId' => $flight->uuid]);
+        ->assertNoContent();
 });
 
 it('replaces segments on the matching leg', function () {
@@ -59,7 +58,7 @@ it('deduplicates requests with the same idempotency key', function () {
     $flight = flightWithLeg();
     $headers = withIdempotency('same-key');
 
-    $this->putJson("/api/flights/{$flight->uuid}", validPayload(), $headers)->assertAccepted();
+    $this->putJson("/api/flights/{$flight->uuid}", validPayload(), $headers)->assertNoContent();
     $this->putJson("/api/flights/{$flight->uuid}", validPayload(), $headers)->assertNoContent();
 });
 

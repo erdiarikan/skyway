@@ -191,24 +191,7 @@ Content-Type: application/json
 Response: `201 Created`
 
 ```json
-{
-  "flightId": "550e8400-e29b-41d4-a716-446655440000",
-  "legs": [
-    {
-      "segments": [
-        {
-          "origin": "BCN",
-          "destination": "LON",
-          "departure": "2026-06-09T06:45:00",
-          "arrival": "2026-06-09T10:55:00",
-          "cabinClass": "Y",
-          "airline": "UA",
-          "flightNumber": "101"
-        }
-      ]
-    }
-  ]
-}
+{ "flightId": "550e8400-e29b-41d4-a716-446655440000" }
 ```
 
 ### Update Flight
@@ -222,13 +205,7 @@ Idempotency-Key: unique-request-id
 Content-Type: application/json
 ```
 
-Response: `202 Accepted`
-
-```json
-{ "flightId": "550e8400-e29b-41d4-a716-446655440000" }
-```
-
-Processing happens asynchronously via Horizon.
+Response: `204 No Content` — processing happens asynchronously via Horizon.
 
 The `Idempotency-Key` header ensures duplicate requests (retries, network timeouts) are processed only once.
 
