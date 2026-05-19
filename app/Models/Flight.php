@@ -17,20 +17,21 @@ final class Flight extends Model
 
     protected $fillable = [];
 
-    protected static function booted(): void
-    {
-        self::creating(function (self $flight): void {
-            $flight->uuid = (string) Str::uuid();
-        });
-    }
-
     public function getRouteKeyName(): string
     {
         return 'uuid';
     }
 
+    /** @return HasMany<Leg, $this> */
     public function legs(): HasMany
     {
         return $this->hasMany(Leg::class)->orderBy('position');
+    }
+
+    protected static function booted(): void
+    {
+        self::creating(function (self $flight): void {
+            $flight->uuid = (string) Str::uuid();
+        });
     }
 }

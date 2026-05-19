@@ -16,6 +16,7 @@ final readonly class SegmentData
         public string $flightNumber,
     ) {}
 
+    /** @param array<string, mixed> $segment */
     public static function fromArray(array $segment): self
     {
         return new self(

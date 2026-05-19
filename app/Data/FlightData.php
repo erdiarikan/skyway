@@ -13,6 +13,7 @@ final readonly class FlightData
         public array $legs,
     ) {}
 
+    /** @param array{legs: list<array{segments: non-empty-list<array<string, mixed>>}>} $validated */
     public static function fromArray(array $validated): self
     {
         return new self(

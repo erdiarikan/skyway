@@ -15,6 +15,7 @@ final readonly class LegData
         public array $segments,
     ) {}
 
+    /** @param array{segments: non-empty-list<array<string, mixed>>} $leg */
     public static function fromArray(array $leg): self
     {
         $segments = array_map(

@@ -17,11 +17,13 @@ final class Leg extends Model
 
     protected $fillable = ['flight_id', 'origin', 'destination', 'position'];
 
+    /** @return BelongsTo<Flight, $this> */
     public function flight(): BelongsTo
     {
         return $this->belongsTo(Flight::class);
     }
 
+    /** @return HasMany<Segment, $this> */
     public function segments(): HasMany
     {
         return $this->hasMany(Segment::class)->orderBy('position');

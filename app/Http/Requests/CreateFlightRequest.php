@@ -36,7 +36,10 @@ final class CreateFlightRequest extends FormRequest
 
     public function toData(): FlightData
     {
-        return FlightData::fromArray($this->validated());
+        /** @var array{legs: list<array{segments: non-empty-list<array<string, mixed>>}>} $validated */
+        $validated = $this->validated();
+
+        return FlightData::fromArray($validated);
     }
 
     public function withValidator(Validator $validator): void
